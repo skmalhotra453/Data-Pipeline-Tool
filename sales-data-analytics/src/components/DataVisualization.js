@@ -7,7 +7,7 @@ function DataVisualization() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('/api/visualization', { responseType: 'blob' });
+        const response = await axios.get('http://localhost:5000/api/visualization', { responseType: 'blob' });
         const url = URL.createObjectURL(response.data);
         setImageUrl(url);
       } catch (error) {
@@ -27,7 +27,7 @@ function DataVisualization() {
 
   return (
     <div>
-      {imageUrl && <img src={imageUrl} alt="Visualization" />}
+      {imageUrl ? <img src={imageUrl} alt="Visualization" /> : <div>Loading...</div>}
     </div>
   );
 }
