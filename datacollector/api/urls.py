@@ -1,6 +1,7 @@
 from django.urls import path
-from .views import collect_data
+from . import views
 
 urlpatterns = [
-    path('collect/<str:source>/', collect_data)
+    path('data-collect/<str:source>/', views.data_collect, name='data_collect'),
+    path('visualization/', views.data_visualization, name='data_visualization'),
 ]

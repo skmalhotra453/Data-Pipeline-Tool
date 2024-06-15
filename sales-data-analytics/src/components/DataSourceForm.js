@@ -10,29 +10,53 @@ function DataSourceForm({ selectedSource }) {
   }, [selectedSource]);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData((prevData) => ({ ...prevData, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    axios.post(`/api/data-collect/${selectedSource}`, formData)
-      .then(response => {
-        console.log('Data collected:', response.data);
-      });
+    try {
+      const response = await axios.post(`/api/data-collect/${selectedSource}`, formData);
+      console.log('Data collected:', response.data);
+    } catch (error) {
+      console.error('Error collecting data:', error);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit}>
       {selectedSource === 's3' && (
         <>
-          <TextField label="AWS Access Key" name="awsAccessKey" onChange={handleChange} required />
-          <TextField label="AWS Secret Key" name="awsSecretKey" onChange={handleChange} required />
-          <TextField label="Bucket Name" name="bucketName" onChange={handleChange} required />
-          <TextField label="Object Key" name="objectKey" onChange={handleChange} required />
+          <TextField 
+            label="AWS Access Key" 
+            name="awsAccessKey" 
+            onChange={handleChange} 
+            required 
+          />
+          <TextField 
+            label="AWS Secret Key" 
+            name="awsSecretKey" 
+            onChange={handleChange} 
+            required 
+          />
+          <TextField 
+            label="Bucket Name" 
+            name="bucketName" 
+            onChange={handleChange} 
+            required 
+          />
+          <TextField 
+            label="Object Key" 
+            name="objectKey" 
+            onChange={handleChange} 
+            required 
+          />
         </>
       )}
-      {/* Add similar fields for other data sources */}
-      <Button variant="contained" type="submit">Submit</Button>
+      {/* Add similar fields for other data sources as needed */}
+      <Button variant="contained" type="submit">
+        Submit
+      </Button>
     </form>
   );
 }

@@ -9,14 +9,13 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 function DataSourceSelector({ onSelect }) {
   return (
     <div className="data-source-icons">
-      <IconButton onClick={() => onSelect('s3')}><CloudIcon /></IconButton>
-      <IconButton onClick={() => onSelect('azure')}><CloudQueueIcon /></IconButton>
-      <IconButton onClick={() => onSelect('gdrive')}><FolderIcon /></IconButton>
-      <IconButton onClick={() => onSelect('csv')}><DescriptionIcon /></IconButton>
-      <IconButton onClick={() => onSelect('pdf')}><PictureAsPdfIcon /></IconButton>
+      <IconButton onClick={() => onSelect('s3')} aria-label="Select S3"><CloudIcon /></IconButton>
+      <IconButton onClick={() => onSelect('azure')} aria-label="Select Azure"><CloudQueueIcon /></IconButton>
+      <IconButton onClick={() => onSelect('gdrive')} aria-label="Select Google Drive"><FolderIcon /></IconButton>
+      <IconButton onClick={() => onSelect('csv')} aria-label="Select CSV"><DescriptionIcon /></IconButton>
+      <IconButton onClick={() => onSelect('pdf')} aria-label="Select PDF"><PictureAsPdfIcon /></IconButton>
     </div>
   );
 }
 
 export default DataSourceSelector;
-

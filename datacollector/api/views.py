@@ -1,60 +1,33 @@
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse, HttpResponse
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
 import boto3
-from azure.storage.blob import BlobServiceClient
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
-import pandas as pd
-import PyPDF2
-import json
+from botocore.exceptions import NoCredentialsError
+import os
 
-@csrf_exempt
-def collect_data(request, source):
-    if request.method == 'POST':
-        params = json.loads(request.body)
-        if source == 's3':
-            return collect_from_s3(params)
-        elif source == 'azure':
-            return collect_from_azure(params)
-        elif source == 'gdrive':
-            return collect_from_gdrive(params)
-        elif source == 'csv':
-            return collect_from_csv(params)
-        elif source == 'pdf':
-            return collect_from_pdf(params)
-    return JsonResponse({'status': 'Invalid request'}, status=400)
+@api_view(['POST'])
+def data_collect(request, source):
+    data = request.data
+    if source == 's3':
+        aws_access_key = data.get('awsAccessKey')
+        aws_secret_key = data.get('awsSecretKey')
+        bucket_name = data.get('bucketName')
+        object_key = data.get('objectKey')
+        s3 = boto3.client('s3', aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
+        try:
+            s3.download_file(bucket_name, object_key, f'/tmp/{object_key}')
+            return Response({'message': 'Data collected successfully'}, status=status.HTTP_200_OK)
+        except NoCredentialsError:
+            return Response({'error': 'Invalid AWS credentials'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({'error': 'Unsupported source'}, status=status.HTTP_400_BAD_REQUEST)
 
-def collect_from_s3(params):
-    s3 = boto3.client('s3', aws_access_key_id=params['awsAccessKey'], aws_secret_access_key=params['awsSecretKey'])
-    s3.download_file(params['bucketName'], params['objectKey'], '/tmp/data.csv')
-    data = pd.read_csv('/tmp/data.csv')
-    return JsonResponse({'status': 'success', 'data': data.to_dict()})
-
-def collect_from_azure(params):
-    blob_service_client = BlobServiceClient.from_connection_string(params['connectionString'])
-    blob_client = blob_service_client.get_blob_client(container=params['containerName'], blob=params['blobName'])
-    with open('/tmp/data.csv', "wb") as download_file:
-        download_file.write(blob_client.download_blob().readall())
-    data = pd.read_csv('/tmp/data.csv')
-    return JsonResponse({'status': 'success', 'data': data.to_dict()})
-
-def collect_from_gdrive(params):
-    gauth = GoogleAuth()
-    gauth.LocalWebserverAuth()
-    drive = GoogleDrive(gauth)
-    file = drive.CreateFile({'id': params['fileId']})
-    file.GetContentFile('/tmp/data.csv')
-    data = pd.read_csv('/tmp/data.csv')
-    return JsonResponse({'status': 'success', 'data': data.to_dict()})
-
-def collect_from_csv(params):
-    data = pd.read_csv(params['filePath'])
-    return JsonResponse({'status': 'success', 'data': data.to_dict()})
-
-def collect_from_pdf(params):
-    with open(params['filePath'], 'rb') as file:
-        reader = PyPDF2.PdfFileReader(file)
-        text = ""
-        for page in range(reader.numPages):
-            text += reader.getPage(page).extract_text()
-    return JsonResponse({'status': 'success', 'data': text})
+@api_view(['GET'])
+def data_visualization(request):
+    try:
+        with open('/path/to/visualization.png', 'rb') as img:
+            return HttpResponse(img.read(), content_type='image/png')
+    except FileNotFoundError:
+        return Response({'error': 'Visualization not found'}, status=status.HTTP_404_NOT_FOUND)
